@@ -35,7 +35,7 @@ def get_master_files():
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    master_files = get_master_files()
+    
 
     if request.method == "POST":
         file = request.files["file"]
@@ -50,10 +50,10 @@ def index():
             columns=df.columns.tolist(),
             column_map=column_map,
             data=df.to_dict(orient="records"),
-            master_files=master_files
+            
         )
 
-    return render_template("index.html", master_files=master_files)
+    return render_template("index.html", master_files=get_master_files())
 
 
 @app.route("/generate", methods=["POST"])
@@ -87,6 +87,22 @@ def generate():
         f"{kitchen_name}_{today}_master_inventory.xlsx"
     )
     df.to_excel(master_path, index=False)
+    # Open workbook and apply wrap_text to all cells
+    wb = load_workbook(master_path)
+    ws = wb.active
+
+    for row in ws.iter_rows():
+        for cell in row:
+            if cell.value:
+                cell.alignment = Alignment(wrap_text=True)
+
+    # Optionally auto-adjust column width
+    for col in ws.columns:
+        max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
+        ws.column_dimensions[col[0].column_letter].width = min(max_length + 2, 40)
+
+    wb.save(master_path)
+
 
     # Draft only
     if action == "draft":
