@@ -67,7 +67,39 @@
         /* Mobile friendly */
         @media (max-width: 768px) {
             .wrap-text {
-                min-height: 52px;
+                min-height: 60px;
+            }
+        }
+        /* Mobile stacking for table */
+        @media (max-width: 768px) {
+            .wrap-table thead {
+                display: none; /* hide header */
+            }
+            .wrap-table, 
+            .wrap-table tbody, 
+            .wrap-table tr, 
+            .wrap-table td {
+                display: block;
+                width: 100%;
+            }
+            .wrap-table tr {
+                margin-bottom: 1rem;
+                border-bottom: 2px solid #dee2e6;
+            }
+            .wrap-table td {
+                text-align: left;
+                padding-left: 50%;
+                position: relative;
+                white-space: normal; /* enable wrapping */
+            }
+            .wrap-table td::before {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                width: 45%;
+                white-space: nowrap;
+                font-weight: bold;
+                content: attr(data-label);
             }
         }
         </style>
@@ -111,7 +143,7 @@
             {% for row_index in range(data|length) %}
                 <tr>
                     {% for col in columns %}
-                        <td>
+                        <td data-label="{{ col }}">
                             {% if "quantity" in col|lower %}
                                 <input
                                     type="number"
