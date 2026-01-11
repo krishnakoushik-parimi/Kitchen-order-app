@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, send_file
 import pandas as pd
 import os
 from datetime import datetime
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment
 
 app = Flask(__name__)
 
@@ -63,7 +65,7 @@ def generate():
     supplier_col = next(c for c in df.columns if "supplier" in c.lower())
     current_col = next(c for c in df.columns if "current" in c.lower())
 
-    # Convert requested quantity
+    # Convert requested quantity to numeric
     df[requested_col] = pd.to_numeric(df[requested_col], errors="coerce").fillna(0)
 
     # Save master inventory (always)
@@ -86,18 +88,41 @@ def generate():
     order_df = df[df[requested_col] > 0].copy()
 
     # Remove current quantity from order list
-    order_df.drop(columns=[current_col], inplace=True)
+    if current_col in order_df.columns:
+        order_df.drop(columns=[current_col], inplace=True)
 
+    # Output path
     output_path = os.path.join(
         UPLOAD_FOLDER,
         f"{kitchen_name}_{today}_order_list.xlsx"
     )
 
-    # Create supplier-wise sheets
+    # Save supplier-wise sheets first
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         for supplier, group in order_df.groupby(supplier_col):
-            sheet_name = str(supplier)[:31]
+            sheet_name = str(supplier)[:31]  # Excel sheet name max 31 chars
             group.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    # Open workbook to apply wrap text and auto column width
+    wb = load_workbook(output_path)
+
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+
+        # Wrap text
+        for row in ws.iter_rows():
+            for cell in row:
+                cell.alignment = Alignment(wrap_text=True)
+
+        # Auto adjust column width
+        for col in ws.columns:
+            max_length = max(
+                len(str(cell.value)) if cell.value else 0
+                for cell in col
+            )
+            ws.column_dimensions[col[0].column_letter].width = min(max_length + 2, 40)
+
+    wb.save(output_path)
 
     return send_file(output_path, as_attachment=True)
 
