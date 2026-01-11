@@ -4,106 +4,71 @@
     <title>Edit Quantities</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet">
-      <style>
-        /* Make number inputs mobile-friendly */
-        .quantity-input {
-            min-height: 48px;        /* Finger friendly */
-            font-size: 16px;         /* Prevent zoom on iOS */
-            padding: 8px;
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* =========================
+           TABLE BEHAVIOR (CRITICAL)
+        ========================== */
+        .wrap-table {
+            table-layout: fixed;      /* 🔥 force columns to shrink */
+            width: 100%;
         }
 
-        /* Force spinner buttons to show */
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            opacity: 1;
-            height: auto;
-        }
-        /* Allow wrapping everywhere */
-        .wrap-table td,
-        .wrap-table th {
-            white-space: normal;     /* 🔥 KEY LINE */
+        .wrap-table th,
+        .wrap-table td {
+            white-space: normal;
             word-break: break-word;
             vertical-align: middle;
-            padding: 10px;
-            font-size: 15px;
-        }
-
-        /* Text inputs expand nicely */
-        .wrap-table input[type=text] {
-            min-height: 44px;
-            font-size: 15px;
-        }
-
-        /* Number inputs remain tap-friendly */
-        .quantity-input {
-            min-height: 48px;
-            font-size: 16px;
             padding: 8px;
+            font-size: 15px;
         }
 
-        /* Prevent iOS zoom */
-        input {
-            font-size: 16px;
+        /* =========================
+           INPUTS & TEXTAREAS
+        ========================== */
+        .wrap-table input,
+        .wrap-table textarea {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 16px; /* prevents iOS zoom */
         }
 
-        /* Clean mobile spacing */
-        @media (max-width: 768px) {
-            .wrap-table td {
-                padding: 12px 8px;
-            }
+        .quantity-input {
+            min-height: 44px;
+            padding: 6px;
         }
+
         .wrap-text {
             resize: vertical;
             min-height: 44px;
-            font-size: 15px;
             line-height: 1.3;
-            white-space: pre-wrap;     /* 🔥 wrap text */
-            word-break: break-word;
+            white-space: pre-wrap;
         }
 
-        /* Mobile friendly */
+        /* =========================
+           NUMBER SPINNER (MOBILE)
+        ========================== */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+
+        /* =========================
+           MOBILE TUNING
+        ========================== */
         @media (max-width: 768px) {
+            .wrap-table th,
+            .wrap-table td {
+                font-size: 14px;
+                padding: 6px;
+            }
+
             .wrap-text {
-                min-height: 60px;
+                min-height: 52px;
             }
         }
-        /* Mobile stacking for table */
-        @media (max-width: 768px) {
-            .wrap-table thead {
-                display: none; /* hide header */
-            }
-            .wrap-table, 
-            .wrap-table tbody, 
-            .wrap-table tr, 
-            .wrap-table td {
-                display: block;
-                width: 100%;
-            }
-            .wrap-table tr {
-                margin-bottom: 1rem;
-                border-bottom: 2px solid #dee2e6;
-            }
-            .wrap-table td {
-                text-align: left;
-                padding-left: 50%;
-                position: relative;
-                white-space: normal; /* enable wrapping */
-            }
-            .wrap-table td::before {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                width: 45%;
-                white-space: nowrap;
-                font-weight: bold;
-                content: attr(data-label);
-            }
-        }
-        </style>
-
+    </style>
 </head>
 
 <body class="bg-light">
@@ -129,6 +94,7 @@
         <input type="hidden" name="safe_columns" value="{{ column_map[col] }}">
     {% endfor %}
 
+    <!-- TABLE -->
     <div class="table-responsive">
         <table class="table table-bordered align-middle wrap-table">
             <thead class="table-dark">
@@ -143,7 +109,7 @@
             {% for row_index in range(data|length) %}
                 <tr>
                     {% for col in columns %}
-                        <td data-label="{{ col }}">
+                        <td>
                             {% if "quantity" in col|lower %}
                                 <input
                                     type="number"
@@ -152,7 +118,6 @@
                                     value="{{ data[row_index][col] }}"
                                     min="0"
                                     step="1">
-
                             {% else %}
                                 <textarea
                                     class="form-control wrap-text"
@@ -170,21 +135,13 @@
     <!-- Buttons -->
     <div class="row mt-3">
         <div class="col-md-4 col-sm-12 mb-2">
-            <button
-                type="submit"
-                name="action"
-                value="draft"
-                class="btn btn-secondary w-100">
+            <button type="submit" name="action" value="draft" class="btn btn-secondary w-100">
                 Save Draft
             </button>
         </div>
 
         <div class="col-md-4 col-sm-12">
-            <button
-                type="submit"
-                name="action"
-                value="generate"
-                class="btn btn-success w-100">
+            <button type="submit" name="action" value="generate" class="btn btn-success w-100">
                 Generate Order Excel
             </button>
         </div>
