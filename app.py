@@ -19,8 +19,23 @@ def safe_key(col):
     return clean_header(col).lower().replace(" ", "_")
 
 
+def get_master_files():
+    files = []
+    for f in os.listdir(UPLOAD_FOLDER):
+        if f.endswith("_master_inventory.xlsx"):
+            path = os.path.join(UPLOAD_FOLDER, f)
+            files.append({
+                "name": f,
+                "path": path,
+                "time": os.path.getmtime(path)
+            })
+    return sorted(files, key=lambda x: x["time"], reverse=True)
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
+    master_files = get_master_files()
+
     if request.method == "POST":
         file = request.files["file"]
 
@@ -33,10 +48,11 @@ def index():
             "table.html",
             columns=df.columns.tolist(),
             column_map=column_map,
-            data=df.to_dict(orient="records")
+            data=df.to_dict(orient="records"),
+            master_files=master_files
         )
 
-    return render_template("index.html")
+    return render_template("index.html", master_files=master_files)
 
 
 @app.route("/generate", methods=["POST"])
@@ -50,81 +66,61 @@ def generate():
     today = datetime.now().strftime("%Y-%m-%d")
 
     rows = []
-
     for i in range(row_count):
         row = {}
         for col, safe in zip(columns, safe_columns):
-            val = request.form.get(f"{safe}_{i}", "").strip()
-            row[col] = val
+            row[col] = request.form.get(f"{safe}_{i}", "").strip()
         rows.append(row)
 
     df = pd.DataFrame(rows)
 
-    # Identify important columns
     requested_col = next(c for c in df.columns if "requested" in c.lower())
     supplier_col = next(c for c in df.columns if "supplier" in c.lower())
     current_col = next(c for c in df.columns if "current" in c.lower())
 
-    # Convert requested quantity to numeric
     df[requested_col] = pd.to_numeric(df[requested_col], errors="coerce").fillna(0)
 
-    # Save master inventory (always)
+    # 🔥 SAVE MASTER INVENTORY (ALWAYS)
     master_path = os.path.join(
         UPLOAD_FOLDER,
         f"{kitchen_name}_{today}_master_inventory.xlsx"
     )
     df.to_excel(master_path, index=False)
 
-    # Save draft only
+    # Draft only
     if action == "draft":
-        draft_path = os.path.join(
-            UPLOAD_FOLDER,
-            f"{kitchen_name}_{today}_draft.xlsx"
-        )
-        df.to_excel(draft_path, index=False)
         return "Draft saved successfully"
 
-    # Filter order items
+    # ORDER LIST
     order_df = df[df[requested_col] > 0].copy()
 
-    # Remove current quantity from order list
     if current_col in order_df.columns:
         order_df.drop(columns=[current_col], inplace=True)
 
-    # Output path
     output_path = os.path.join(
         UPLOAD_FOLDER,
         f"{kitchen_name}_{today}_order_list.xlsx"
     )
 
-    # Save supplier-wise sheets first
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         for supplier, group in order_df.groupby(supplier_col):
-            sheet_name = str(supplier)[:31]  # Excel sheet name max 31 chars
-            group.to_excel(writer, sheet_name=sheet_name, index=False)
+            group.to_excel(writer, sheet_name=str(supplier)[:31], index=False)
 
-    # Open workbook to apply wrap text and auto column width
     wb = load_workbook(output_path)
-
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-
-        # Wrap text
         for row in ws.iter_rows():
             for cell in row:
                 cell.alignment = Alignment(wrap_text=True)
-
-        # Auto adjust column width
-        for col in ws.columns:
-            max_length = max(
-                len(str(cell.value)) if cell.value else 0
-                for cell in col
-            )
-            ws.column_dimensions[col[0].column_letter].width = min(max_length + 2, 40)
-
     wb.save(output_path)
 
     return send_file(output_path, as_attachment=True)
+
+
+@app.route("/download/<filename>")
+def download(filename):
+    path = os.path.join(UPLOAD_FOLDER, filename)
+    return send_file(path, as_attachment=True)
 
 
 if __name__ == "__main__":
