@@ -37,11 +37,21 @@
                 <div class="card-header fw-bold">
                     📋 Master Inventory Drafts (Boss Access)
                 </div>
+
                 <ul class="list-group list-group-flush">
                     {% for f in master_files %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="small">{{ f.name }}</span>
-                        <a href="/download/{{ f.name }}" class="btn btn-sm btn-outline-primary">
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div>
+                            {% if loop.index0 == 0 %}
+                                <span class="badge bg-success me-2">Latest</span>
+                            {% endif %}
+                            <span class="small fw-semibold">{{ f.name }}</span>
+                            <div class="text-muted small">
+                                Updated: {{ f.display_time }}
+                            </div>
+                        </div>
+
+                        <a href="/download/{{ f.name }}" class="btn btn-sm btn-outline-primary mt-2 mt-sm-0">
                             Download
                         </a>
                     </li>
@@ -49,6 +59,7 @@
                 </ul>
             </div>
             {% endif %}
+
 
         </div>
     </div>

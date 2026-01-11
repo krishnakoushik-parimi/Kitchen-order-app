@@ -27,7 +27,8 @@ def get_master_files():
             files.append({
                 "name": f,
                 "path": path,
-                "time": os.path.getmtime(path)
+                "time": os.path.getmtime(path),
+                "display_time": datetime.fromtimestamp(os.path.getmtime(path)).strftime("%b %d, %I:%M %p")
             })
     return sorted(files, key=lambda x: x["time"], reverse=True)
 
