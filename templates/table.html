@@ -21,6 +21,24 @@
             opacity: 1;
             height: auto;
         }
+        /* Mobile table readability */
+            .mobile-table td,
+            .mobile-table th {
+                white-space: nowrap;
+                padding: 10px;
+                font-size: 15px;
+            }
+
+            .mobile-table input[type=text] {
+                min-width: 140px;
+            }
+
+            @media (max-width: 768px) {
+                .mobile-table {
+                    font-size: 14px;
+                }
+            }
+
         </style>
 
 </head>
@@ -49,7 +67,7 @@
     {% endfor %}
 
     <div class="table-responsive">
-        <table class="table table-bordered table-sm align-middle">
+        <table class="table table-bordered align-middle mobile-table">
             <thead class="table-dark">
                 <tr>
                     {% for col in columns %}
