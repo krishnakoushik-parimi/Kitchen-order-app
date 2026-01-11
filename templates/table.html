@@ -21,23 +21,40 @@
             opacity: 1;
             height: auto;
         }
-        /* Mobile table readability */
-            .mobile-table td,
-            .mobile-table th {
-                white-space: nowrap;
-                padding: 10px;
-                font-size: 15px;
-            }
+        /* Allow wrapping everywhere */
+        .wrap-table td,
+        .wrap-table th {
+            white-space: normal;     /* 🔥 KEY LINE */
+            word-break: break-word;
+            vertical-align: middle;
+            padding: 10px;
+            font-size: 15px;
+        }
 
-            .mobile-table input[type=text] {
-                min-width: 140px;
-            }
+        /* Text inputs expand nicely */
+        .wrap-table input[type=text] {
+            min-height: 44px;
+            font-size: 15px;
+        }
 
-            @media (max-width: 768px) {
-                .mobile-table {
-                    font-size: 14px;
-                }
+        /* Number inputs remain tap-friendly */
+        .quantity-input {
+            min-height: 48px;
+            font-size: 16px;
+            padding: 8px;
+        }
+
+        /* Prevent iOS zoom */
+        input {
+            font-size: 16px;
+        }
+
+        /* Clean mobile spacing */
+        @media (max-width: 768px) {
+            .wrap-table td {
+                padding: 12px 8px;
             }
+        }
 
         </style>
 
@@ -67,7 +84,7 @@
     {% endfor %}
 
     <div class="table-responsive">
-        <table class="table table-bordered align-middle mobile-table">
+        <table class="table table-bordered align-middle wrap-table">
             <thead class="table-dark">
                 <tr>
                     {% for col in columns %}
